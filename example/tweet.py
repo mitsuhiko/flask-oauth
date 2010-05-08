@@ -56,10 +56,8 @@ class User(Base):
     oauth_token = Column(String(200))
     oauth_secret = Column(String(200))
 
-    def __init__(self, name, oauth_token, oauth_secret):
+    def __init__(self, name):
         self.name = name
-        self.oauth_token = oauth_token
-        self.oauth_secret = oauth_secret
 
 
 @app.before_request
@@ -91,7 +89,15 @@ def get_twitter_token():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    tweets = None
+    if g.user is not None:
+        resp = twitter.get('statuses/home_timeline.json')
+        if resp.status == 200:
+            tweets = resp.data
+        else:
+            flash('Unable to load tweets from Twitter. Maybe out of '
+                  'API calls or Twitter is overloaded.')
+    return render_template('index.html', tweets=tweets)
 
 
 @app.route('/tweet', methods=['POST'])
@@ -152,20 +158,18 @@ def oauth_authorized(resp):
 
     user = User.query.filter_by(name=resp['screen_name']).first()
 
-    # user never signed on on
+    # user never signed on
     if user is None:
-        user = User(resp['screen_name'],
-                    resp['oauth_token'],
-                    resp['oauth_token_secret'])
+        user = User(resp['screen_name'])
         db_session.add(user)
 
-    # in case the user temporarily revoked out access, we have to
-    # update the authentication token and secret in the database
-    else:
-        user.oauth_token = resp['oauth_token']
-        user.oauth_token_secret = resp['oauth_token_secret']
-
+    # in any case we update the authenciation token in the db
+    # In case the user temporarily revoked access we will have
+    # new tokens here.
+    user.oauth_token = resp['oauth_token']
+    user.oauth_secret = resp['oauth_token_secret']
     db_session.commit()
+
     session['user_id'] = user.id
     flash('You were signed in')
     return redirect(next_url)

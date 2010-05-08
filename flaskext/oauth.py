@@ -27,6 +27,12 @@ def parse_response(resp, content, strict=False):
     return url_decode(content).to_dict()
 
 
+def add_query(url, args):
+    if not args:
+        return url
+    return url + ('?' in url and '&' or '?') + url_encode(args)
+
+
 def encode_request_data(data, format):
     if format is None:
         return data, None
@@ -122,13 +128,20 @@ class OAuthRemoteApp(object):
         if headers is None:
             headers = {}
         client = self.make_client()
-        if content_type is None:
-            data, content_type = encode_request_data(data, format)
-        if content_type is not None:
-            headers['Content-Type'] = content_type
-        resp, content = client.request(self.expand_url(url), method=method,
-                                       body=data, headers=headers)
-        return OAuthResponse(resp, content)
+        url = self.expand_url(url)
+        if method == 'GET':
+            assert format == 'urlencoded'
+            if data is not None:
+                url = add_query(url, data)
+                data = None
+        else:
+            if content_type is None:
+                data, content_type = encode_request_data(data, format)
+            if content_type is not None:
+                headers['Content-Type'] = content_type
+                headers['Content-Length'] = str(len(data))
+        return OAuthResponse(*client.request(url, method=method,
+                                             body=data, headers=headers))
 
     def expand_url(self, url):
         return urljoin(self.base_url, url)
