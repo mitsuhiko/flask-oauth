@@ -1,0 +1,19 @@
+{% extends "layout.html" %}
+{% block body %}
+  <h2>Overview</h2>
+  {% if g.user %}
+  <p>
+    Hello {{ g.user.name }}!  Wanna tweet something?
+  <form action="{{ url_for('tweet') }}"  method=post>
+    <p>
+      <input type=text name=tweet size=40>
+      <input type=submit value="Tweet!">
+  </form>
+  {% else %}
+  <p>
+    <a href="{{ url_for('login') }}"><img src="{{
+      url_for('static', filename='sign-in.png') }}" alt="sign in"></a>
+  {% endif %}
+  <p>
+    This is just an example page so that something is here.
+{% endblock %}
