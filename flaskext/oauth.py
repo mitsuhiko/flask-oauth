@@ -3,7 +3,7 @@
     flaskext.oauth
     ~~~~~~~~~~~~~~
 
-    Description of the module goes here...
+    Implements basic OAuth support for Flask.
 
     :copyright: (c) 2010 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.

@@ -1,3 +1,5 @@
 Flask-OAuth
 
-Description goes here
+Implements basic OAuth support for Flask.  Currently it can only
+be used to hook up with external OAuth services.  It does not yet
+support implementing providers.
