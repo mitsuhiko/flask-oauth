@@ -110,12 +110,21 @@ def logout():
 @twitter.authorized_handler
 def oauth_authorized(resp):
     user = User.query.filter_by(name=resp['screen_name']).first()
+
+    # user never signed on on
     if user is None:
         user = User(resp['screen_name'],
                     resp['oauth_token'],
                     resp['oauth_token_secret'])
         db_session.add(user)
-        db_session.commit()
+
+    # in case the user temporarily revoked out access, we have to
+    # update the authentication token and secret in the database
+    else:
+        user.oauth_token = resp['oauth_token']
+        user.oauth_token_secret = resp['oauth_token_secret']
+
+    db_session.commit()
     session['user_id'] = user.id
     flash('You were signed in')
     return redirect(request.args.get('next') or url_for('index'))
