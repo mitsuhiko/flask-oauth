@@ -83,7 +83,7 @@ class OAuthRemoteApp(object):
     def __init__(self, oauth, name, request_token_url,
                  access_token_url, authorize_url,
                  consumer_key, consumer_secret,
-                 base_url=None, free_token_after_auth=True):
+                 base_url=None):
         self.oauth = oauth
         self.base_url = base_url
         self.name = name
@@ -93,7 +93,6 @@ class OAuthRemoteApp(object):
         self.consumer_key = consumer_key
         self.consumer_secret = consumer_secret
         self.tokengetter_func = None
-        self.free_token_after_auth = free_token_after_auth
 
         self._consumer = oauth2.Consumer(self.consumer_key,
                                          self.consumer_secret)
@@ -149,6 +148,7 @@ class OAuthRemoteApp(object):
         return tup
 
     def get_request_token(self):
+        assert self.tokengetter_func is not None, 'missing tokengetter function'
         rv = self.tokengetter_func()
         if rv is None:
             rv = session.get(self.name + '_oauthtok')
@@ -172,17 +172,17 @@ class OAuthRemoteApp(object):
     def authorized_handler(self, f):
         @wraps(f)
         def decorated(*args, **kwargs):
-            client = self.make_client()
-            resp, content = client.request('%s?oauth_verifier=%s' % (
-                self.expand_url(self.access_token_url),
-                request.args['oauth_verifier']
-            ), 'GET')
-            if resp['status'] != '200':
-                raise OAuthException('Invalid response from ' + self.name)
-            data = parse_response(resp, content)
-            try:
-                return f(data)
-            finally:
-                if self.free_token_after_auth:
-                    self.free_request_token()
+            if 'oauth_verifier' in request.args:
+                client = self.make_client()
+                resp, content = client.request('%s?oauth_verifier=%s' % (
+                    self.expand_url(self.access_token_url),
+                    request.args['oauth_verifier']
+                ), 'GET')
+                if resp['status'] != '200':
+                    raise OAuthException('Invalid response from ' + self.name)
+                data = parse_response(resp, content)
+            else:
+                data = None
+            self.free_request_token()
+            return f(data)
         return decorated
