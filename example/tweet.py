@@ -113,6 +113,8 @@ def tweet():
     })
     if resp.status == 403:
         flash('Your tweet was too long.')
+    elif resp.status == 401:
+        flash('Authorization error with Twitter.')
     else:
         flash('Successfully tweeted your tweet (ID: #%s)' % resp.data['id'])
     return redirect(url_for('index'))

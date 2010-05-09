@@ -63,9 +63,9 @@ def encode_request_data(data, format):
     if format is None:
         return data, None
     elif format == 'json':
-        return json.dumps(data), 'application/json'
+        return json.dumps(data or {}), 'application/json'
     elif format == 'urlencoded':
-        return url_encode(data), 'application/x-www-form-urlencoded'
+        return url_encode(data or {}), 'application/x-www-form-urlencoded'
     raise TypeError('Unknown format %r' % format)
 
 
@@ -234,7 +234,6 @@ class OAuthRemoteApp(object):
                 data, content_type = encode_request_data(data, format)
             if content_type is not None:
                 headers['Content-Type'] = content_type
-                headers['Content-Length'] = str(len(data))
         return OAuthResponse(*client.request(url, method=method,
                                              body=data, headers=headers))
 
