@@ -7,7 +7,7 @@ Adds OAuth support to Flask.
 Links
 `````
 
-* `documentation <http://packages.python.org/Flask-OAuth`_
+* `documentation <http://packages.python.org/Flask-OAuth>`_
 * `development version
   <http://github.com/mitsuhiko/flask-oauth/zipball/master#egg=Flask-OAuth-dev>`_
 """
@@ -21,7 +21,7 @@ setup(
     license='BSD',
     author='Armin Ronacher',
     author_email='armin.ronacher@active-4.com',
-    description='<enter short description here>',
+    description='Adds OAuth support to Flask',
     long_description=__doc__,
     packages=['flaskext'],
     namespace_packages=['flaskext'],
