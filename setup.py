@@ -20,6 +20,7 @@ setup(
     url='http://github.com/mitsuhiko/flask-oauth',
     license='BSD',
     author='Armin Ronacher',
+    author_email='armin.ronacher@active-4.com',
     description='<enter short description here>',
     long_description=__doc__,
     packages=['flaskext'],
