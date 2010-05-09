@@ -16,6 +16,7 @@ import sys, os
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+sys.path.append(os.path.abspath('..'))
 sys.path.append(os.path.abspath('_themes'))
 
 # -- General configuration -----------------------------------------------------
@@ -96,14 +97,17 @@ html_theme = 'flask_small'
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-#html_theme_options = {}
+html_theme_options = {
+    'index_logo':       'flask-oauth.png',
+    'github_fork':      'mitsuhiko/flask-oauth'
+}
 
 # Add any paths that contain custom themes here, relative to this directory.
 html_theme_path = ['_themes']
 
 # The name for this set of Sphinx documents.  If None, it defaults to
 # "<project> v<release> documentation".
-#html_title = None
+html_title = 'Flask-OAuth'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #html_short_title = None

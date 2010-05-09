@@ -2,23 +2,22 @@
 Flask-OAuth
 -----------
 
-Description goes here...
+Adds OAuth support to Flask.
 
 Links
 `````
 
 * `documentation <http://packages.python.org/Flask-OAuth`_
 * `development version
-  <http://github.com/USERNAME/REPOSITORY/zipball/master#egg=Flask-OAuth-dev>`_
-
+  <http://github.com/mitsuhiko/flask-oauth/zipball/master#egg=Flask-OAuth-dev>`_
 """
 from setuptools import setup
 
 
 setup(
     name='Flask-OAuth',
-    version='0.1',
-    url='<enter URL here>',
+    version='0.9',
+    url='http://github.com/mitsuhiko/flask-oauth',
     license='BSD',
     author='Armin Ronacher',
     description='<enter short description here>',

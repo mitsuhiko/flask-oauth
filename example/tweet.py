@@ -130,7 +130,7 @@ def login():
 
 @app.route('/logout')
 def logout():
-    session.pop('user_id')
+    session.pop('user_id', None)
     flash('You were signed out')
     return redirect(request.referrer or url_for('index'))
 
