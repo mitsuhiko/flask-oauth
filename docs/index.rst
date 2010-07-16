@@ -40,7 +40,7 @@ object and register a remote application on it.  This can be done with
 the :meth:`~OAuth.remote_app` method::
 
     oauth = OAuth()
-    the_remote_app = oauth.register_app('the remote app',
+    the_remote_app = oauth.remote_app('the remote app',
         ...
     )
 
