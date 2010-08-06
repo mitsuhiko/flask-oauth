@@ -30,7 +30,7 @@ or alternatively if you have `pip` installed::
 
 .. _Flask: http://flask.pocoo.org/
 .. _OAuth: http://oauth.net/
-.. _python-oauth2: http://pypi.python.org/pypi/Flask-OAuth2
+.. _python-oauth2: http://pypi.python.org/pypi/oauth2/
 
 Defining Remote Applications
 ----------------------------
@@ -40,7 +40,7 @@ object and register a remote application on it.  This can be done with
 the :meth:`~OAuth.remote_app` method::
 
     oauth = OAuth()
-    the_remote_app = oauth.register_app('the remote app',
+    the_remote_app = oauth.remote_app('the remote app',
         ...
     )
 
