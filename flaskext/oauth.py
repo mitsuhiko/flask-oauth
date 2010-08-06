@@ -264,7 +264,7 @@ class OAuthRemoteApp(object):
         return oauth2.Token(*rv)
 
     def free_request_token(self):
-        session.pop(self.name + '_oauthtok')
+        session.pop(self.name + '_oauthtok', None)
 
     def authorize(self, callback=None):
         """Returns a redirect response to the remote authorization URL with
