@@ -91,8 +91,7 @@ class OAuthResponse(object):
 
 class OAuthClient(oauth2.Client):
 
-    def request_new_token(self, uri, callback=None):
-        params = {}
+    def request_new_token(self, uri, callback=None, params={}):
         if callback is not None:
             params['oauth_callback'] = callback
         req = oauth2.Request.from_consumer_and_token(
@@ -149,7 +148,7 @@ class OAuthRemoteApp(object):
     def __init__(self, oauth, name, base_url,
                  request_token_url,
                  access_token_url, authorize_url,
-                 consumer_key, consumer_secret):
+                 consumer_key, consumer_secret, request_token_params={}):
         self.oauth = oauth
         #: the `base_url` all URLs are joined with.
         self.base_url = base_url
@@ -160,7 +159,7 @@ class OAuthRemoteApp(object):
         self.consumer_key = consumer_key
         self.consumer_secret = consumer_secret
         self.tokengetter_func = None
-
+        self.request_token_params = request_token_params
         self._consumer = oauth2.Consumer(self.consumer_key,
                                          self.consumer_secret)
         self._client = OAuthClient(self._consumer)
@@ -244,7 +243,8 @@ class OAuthRemoteApp(object):
         if callback is not None:
             callback = urljoin(request.url, callback)
         resp, content = self._client.request_new_token(
-            self.expand_url(self.request_token_url), callback)
+            self.expand_url(self.request_token_url), callback,
+                self.request_token_params)
         if resp['status'] != '200':
             raise OAuthException('Failed to generate request token')
         data = parse_response(resp, content)
