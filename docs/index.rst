@@ -4,7 +4,7 @@ Flask-OAuth
 .. module:: flaskext.oauth
 
 Flask-OAuth is an extension to `Flask`_ that allows you to interact with
-remove `OAuth`_ enabled applications.  Currently it only implements the
+remote `OAuth`_ enabled applications.  Currently it only implements the
 consumer interface so you cannot expose your own API with OAuth.  It
 depends on the `python-oauth2`_ module.  You can install the requirements
 from PyPI with `easy_install` or `pip` or download them by hand.
@@ -200,7 +200,7 @@ supported:
     ``'json'`` - decoded with JSON rules, most likely a dictionary
     ``'xml'`` - stored as elementtree element
 
-Unkown incoming data is stored as string.  If outgoing data of a different
+Unknown incoming data is stored as string.  If outgoing data of a different
 format should be used, a `content_type` can be specified instead and the
 data provided a encoded string.
 
