@@ -204,6 +204,61 @@ Unknown incoming data is stored as string.  If outgoing data of a different
 format should be used, a `content_type` can be specified instead and the
 data provided a encoded string.
 
+Facebook Example
+----------------
+
+Step 1 - Initialize the oauth provider at the top of your app.py
+
+    # register your app at: 
+    #
+    #   https://www.facebook.com/developers/createapp.php
+    #
+    # then enter the id and secret key facebook assigns for your app
+    facebook_app_id     = '999999999999999999'
+    facebook_secret_key = 'asdfasdfasfasdfasdf'
+
+    # url to redirect back to after user auths with facebook
+    # important: facebook requires that this hostname match the host 
+    # registered with the app at dev.facebook.com
+    # you can set it to localhost when you're developing, and then change it
+    # to your production hostname pre-launch
+    facebook_redirect_uri = 'http://localhost:5000/login_authorized_facebook'
+
+    oauth = OAuth()
+    facebook = oauth.remote_app(
+        'facebook',
+        base_url='https://graph.facebook.com',
+        request_token_url=None,
+        access_token_url='/oauth/access_token',
+        authorize_url='/oauth/authorize',
+        consumer_key=facebook_app_id,
+        consumer_secret=facebook_secret_key,
+        request_token_params = 
+            { 'scope'        : 'read_stream', 
+              'client_id'    : facebook_app_id,
+              'redirect_uri' : facebook_redirect_uri })
+
+Step 2 - Define your facebook functions
+
+    @app.route('/login_authorized_facebook')
+    @facebook.authorized_handler
+    def login_authorized_facebook(resp):
+        if resp is None:
+            flash(u'You denied the request to sign in.')
+            return redirect(url_for('login'))
+        else:
+            # store token in the session so we can use it later
+            session['oauth_token'] = (resp['access_token'], '')
+
+            # get the user's info via a signed oauth request
+            resp = facebook.get('/me')
+            return "woot!  user with id=%s and name=%s is logged in" % \
+                (resp.data['id'], resp.data['name'])
+
+    @facebook.tokengetter
+    def get_oauth_token_facebook():
+        return session.get('oauth_token')
+
 
 API Reference
 -------------
