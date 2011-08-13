@@ -199,7 +199,7 @@ class OAuthRemoteApp(object):
         """
         return oauth2.Client(self._consumer, self.get_request_token())
 
-    def request(self, url, data=None, headers=None, format='urlencoded',
+    def request(self, url, data='', headers=None, format='urlencoded',
                 method='GET', content_type=None):
         """Sends a request to the remote server with OAuth tokens attached.
         The `url` is joined with :attr:`base_url` if the URL is relative.
@@ -227,7 +227,7 @@ class OAuthRemoteApp(object):
             assert format == 'urlencoded'
             if data is not None:
                 url = add_query(url, data)
-                data = None
+                data = ''
         else:
             if content_type is None:
                 data, content_type = encode_request_data(data, format)
