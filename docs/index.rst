@@ -191,14 +191,14 @@ specify it with the `format` parameter.  The following formats are
 supported:
 
 **Outgoing**:
-    ``'urlencode'`` - form encoded data (`GET` as URL and `POST`/`PUT` as
-    request body)
-    ``'json'`` - JSON encoded data (`POST`/`PUT` as request body)
+    - ``'urlencode'`` - form encoded data (`GET` as URL and `POST`/`PUT` as
+      request body)
+    - ``'json'`` - JSON encoded data (`POST`/`PUT` as request body)
 
 **Incoming**
-    ``'urlencode'`` - stored as flat unicode dictionary
-    ``'json'`` - decoded with JSON rules, most likely a dictionary
-    ``'xml'`` - stored as elementtree element
+    - ``'urlencode'`` - stored as flat unicode dictionary
+    - ``'json'`` - decoded with JSON rules, most likely a dictionary
+    - ``'xml'`` - stored as elementtree element
 
 Unknown incoming data is stored as string.  If outgoing data of a different
 format should be used, a `content_type` can be specified instead and the
