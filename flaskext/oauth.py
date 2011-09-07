@@ -9,8 +9,9 @@
     :license: BSD, see LICENSE for more details.
 """
 import httplib2
+import urllib2
 from functools import wraps
-from urlparse import urljoin
+from urlparse import urljoin, parse_qs
 from flask import request, session, json, redirect
 from werkzeug import url_decode, url_encode, url_quote, \
      parse_options_header, Headers
@@ -37,7 +38,8 @@ def get_etree():
 
 def parse_response(resp, content, strict=False):
     ct, options = parse_options_header(resp['content-type'])
-    if ct == 'application/json':
+    if ct == 'application/json' or ct == 'text/javascript':
+        # facebook uses 'text/javascript'
         return json.loads(content)
     elif ct in ('application/xml', 'text/xml'):
         # technically, text/xml is ascii based but because many
@@ -233,6 +235,8 @@ class OAuthRemoteApp(object):
                 data, content_type = encode_request_data(data, format)
             if content_type is not None:
                 headers['Content-Type'] = content_type
+        if data is None:
+            data = ''
         return OAuthResponse(*client.request(url, method=method,
                                              body=data, headers=headers))
 
@@ -273,9 +277,14 @@ class OAuthRemoteApp(object):
         or use a remotely stored callback URL.  Alternatively it's an URL
         on the system that has to be decorated as :meth:`authorized_handler`.
         """
-        token = self.generate_request_token(callback)[0]
-        url = '%s?oauth_token=%s' % (self.expand_url(self.authorize_url),
-                                     url_quote(token))
+        if self.request_token_url:
+            token = self.generate_request_token(callback)[0]
+            url = '%s?oauth_token=%s' % (self.expand_url(self.authorize_url),
+                                         url_quote(token))
+        else:
+            # Facebook case - possibly other oauth2 providers?
+            qs_dict = self.request_token_params
+            url = add_query(self.expand_url(self.authorize_url), qs_dict)
         return redirect(url)
 
     def tokengetter(self, f):
@@ -297,13 +306,25 @@ class OAuthRemoteApp(object):
         def decorated(*args, **kwargs):
             if 'oauth_verifier' in request.args:
                 client = self.make_client()
-                resp, content = client.request('%s?oauth_verifier=%s' % (
+                uri = '%s?oauth_verifier=%s' % (
                     self.expand_url(self.access_token_url),
-                    request.args['oauth_verifier']
-                ), 'GET')
+                    request.args['oauth_verifier'])
+                resp, content = client.request(uri, 'GET')
                 if resp['status'] != '200':
-                    raise OAuthException('Invalid response from ' + self.name)
+                    raise OAuthException('Invalid response from: ' + self.name + 
+                                         ' uri: ' + uri + ' content: ' + content)
                 data = parse_response(resp, content)
+            elif 'code' in request.args:
+                # Facebook case - possibly other oauth2 providers?
+                qs_dict = {
+                    "code"          : request.args.get("code"),
+                    "client_id"     : self.consumer_key,
+                    "client_secret" : self.consumer_secret }
+                if self.request_token_params.has_key("redirect_uri"):
+                    qs_dict["redirect_uri"] = self.request_token_params["redirect_uri"]
+                url = add_query(self.expand_url(self.access_token_url), qs_dict)
+                resp = urllib2.urlopen(url).read()
+                data = { "access_token" : parse_qs(resp)['access_token'][0] }
             else:
                 data = None
             self.free_request_token()
