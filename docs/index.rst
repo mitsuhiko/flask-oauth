@@ -174,7 +174,7 @@ can set it to ``localhost:5000``.
 
 The `APP_ID` and `APP_SECRET` can be retrieved from the facebook app
 control panel.  If you don't have an application registered yet you can do
-this at `facebook.com/developers <https://www.facebook.com/developers/createapp.php>`.
+this at `facebook.com/developers <https://www.facebook.com/developers/createapp.php>`_.
 
 Invoking Remote Methods
 -----------------------
