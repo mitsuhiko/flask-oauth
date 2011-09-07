@@ -148,7 +148,8 @@ class OAuthRemoteApp(object):
     def __init__(self, oauth, name, base_url,
                  request_token_url,
                  access_token_url, authorize_url,
-                 consumer_key, consumer_secret, request_token_params={}):
+                 consumer_key, consumer_secret,
+                 request_token_params=None):
         self.oauth = oauth
         #: the `base_url` all URLs are joined with.
         self.base_url = base_url
@@ -159,7 +160,7 @@ class OAuthRemoteApp(object):
         self.consumer_key = consumer_key
         self.consumer_secret = consumer_secret
         self.tokengetter_func = None
-        self.request_token_params = request_token_params
+        self.request_token_params = request_token_params or {}
         self._consumer = oauth2.Consumer(self.consumer_key,
                                          self.consumer_secret)
         self._client = OAuthClient(self._consumer)
@@ -234,7 +235,8 @@ class OAuthRemoteApp(object):
             if content_type is not None:
                 headers['Content-Type'] = content_type
         return OAuthResponse(*client.request(url, method=method,
-                                             body=data, headers=headers))
+                                             body=data or '',
+                                             headers=headers))
 
     def expand_url(self, url):
         return urljoin(self.base_url, url)
@@ -265,6 +267,7 @@ class OAuthRemoteApp(object):
 
     def free_request_token(self):
         session.pop(self.name + '_oauthtok', None)
+        session.pop(self.name + '_oauthredir', None)
 
     def authorize(self, callback=None):
         """Returns a redirect response to the remote authorization URL with
@@ -273,9 +276,20 @@ class OAuthRemoteApp(object):
         or use a remotely stored callback URL.  Alternatively it's an URL
         on the system that has to be decorated as :meth:`authorized_handler`.
         """
-        token = self.generate_request_token(callback)[0]
-        url = '%s?oauth_token=%s' % (self.expand_url(self.authorize_url),
-                                     url_quote(token))
+        if self.request_token_url:
+            token = self.generate_request_token(callback)[0]
+            url = '%s?oauth_token=%s' % (self.expand_url(self.authorize_url),
+                                         url_quote(token))
+        else:
+            assert callback is not None, 'Callback is required OAuth2'
+            # This is for things like facebook's oauth.  Since we need the
+            # callback for the access_token_url we need to keep it in the
+            # session.
+            params = dict(self.request_token_params)
+            params['redirect_uri'] = callback
+            params['client_id'] = self.consumer_key
+            session[self.name + '_oauthredir'] = callback
+            url = add_query(self.expand_url(self.authorize_url), params)
         return redirect(url)
 
     def tokengetter(self, f):
@@ -303,6 +317,16 @@ class OAuthRemoteApp(object):
                 ), 'GET')
                 if resp['status'] != '200':
                     raise OAuthException('Invalid response from ' + self.name)
+                data = parse_response(resp, content)
+            elif 'code' in request.args:
+                fb_args = {
+                    'code':             request.args.get('code'),
+                    'client_id':        self.consumer_key,
+                    'client_secret':    self.consumer_secret,
+                    'redirect_uri':     session.get(self.name + '_oauthredir')
+                }
+                url = add_query(self.expand_url(self.access_token_url), fb_args)
+                resp, content = self._client.request(url, 'GET')
                 data = parse_response(resp, content)
             else:
                 data = None
