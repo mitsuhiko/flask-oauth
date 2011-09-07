@@ -150,32 +150,6 @@ recommended to store that information in the database instead because it
 allows you to easier debug things and you can store additional information
 associated with the user.
 
-Facebook OAuth
---------------
-
-For facebook the flow is very similar to twitter or other OAuth systems
-but there is a small difference.  You're not using the `request_token_url`
-at all and you need to provide a scope in te `request_token_params`::
-
-    facebook = oauth.remote_app('facebook',
-        base_url='https://graph.facebook.com/',
-        request_token_url=None,
-        access_token_url='/oauth/access_token',
-        authorize_url='https://www.facebook.com/dialog/oauth',
-        consumer_key=FACEBOOK_APP_ID,
-        consumer_secret=FACEBOOK_APP_SECRET,
-        request_token_params={'scope': 'email'}
-    )
-
-Furthermore the `callback` is mandatory for the call to
-:meth:`~OAuthRemoteApp.authorize` and has to match the base URL that was
-specified in the facebook application control panel.  For development you
-can set it to ``localhost:5000``.
-
-The `APP_ID` and `APP_SECRET` can be retrieved from the facebook app
-control panel.  If you don't have an application registered yet you can do
-this at `facebook.com/developers <https://www.facebook.com/developers/createapp.php>`_.
-
 Invoking Remote Methods
 -----------------------
 
@@ -230,6 +204,34 @@ Unknown incoming data is stored as string.  If outgoing data of a different
 format should be used, a `content_type` can be specified instead and the
 data provided a encoded string.
 
+Facebook OAuth
+--------------
+
+For facebook the flow is very similar to twitter or other OAuth systems
+but there is a small difference.  You're not using the `request_token_url`
+at all and you need to provide a scope in te `request_token_params`::
+
+    facebook = oauth.remote_app('facebook',
+        base_url='https://graph.facebook.com/',
+        request_token_url=None,
+        access_token_url='/oauth/access_token',
+        authorize_url='https://www.facebook.com/dialog/oauth',
+        consumer_key=FACEBOOK_APP_ID,
+        consumer_secret=FACEBOOK_APP_SECRET,
+        request_token_params={'scope': 'email'}
+    )
+
+Furthermore the `callback` is mandatory for the call to
+:meth:`~OAuthRemoteApp.authorize` and has to match the base URL that was
+specified in the facebook application control panel.  For development you
+can set it to ``localhost:5000``.
+
+The `APP_ID` and `APP_SECRET` can be retrieved from the facebook app
+control panel.  If you don't have an application registered yet you can do
+this at `facebook.com/developers <https://www.facebook.com/developers/createapp.php>`_.
+
+An example of how to use the facebook API is provided in the `examples
+folder <https://github.com/mitsuhiko/flask-oauth/blob/master/example/facebook.py>`_.
 
 API Reference
 -------------
