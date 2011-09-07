@@ -2,3 +2,4 @@
 *.pyc
 *.pyo
 docs/_build
+dist
