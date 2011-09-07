@@ -242,3 +242,6 @@ API Reference
 
 .. autoclass:: OAuthResponse
    :members:
+
+.. autoexception:: OAuthException
+   :members:

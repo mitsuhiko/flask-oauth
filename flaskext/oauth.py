@@ -108,7 +108,21 @@ class OAuthClient(oauth2.Client):
 
 
 class OAuthException(RuntimeError):
-    pass
+    """Raised if authorization fails for some reason."""
+    message = None
+
+    def __init__(self, message, data=None):
+        #: A helpful error message for debugging
+        self.message = message
+        #: If available, the parsed data from the remote API that can be
+        #: used to pointpoint the error.
+        self.data = data
+
+    def __str__(self):
+        return self.message.encode('utf-8')
+
+    def __unicode__(self):
+        return self.message
 
 
 class OAuth(object):
@@ -143,13 +157,21 @@ class OAuthRemoteApp(object):
     :param authorize_url: the URL for authorization
     :param consumer_key: the application specific consumer key
     :param consumer_secret: the application specific consumer secret
+    :param request_token_params: an optional dictionary of parameters
+                                 to forward to the request token URL
+                                 or authorize URL depending on oauth
+                                 version.
+    :param access_token_method: the HTTP method that should be used
+                                for the access_token_url.  Defaults
+                                to ``'GET'``.
     """
 
     def __init__(self, oauth, name, base_url,
                  request_token_url,
                  access_token_url, authorize_url,
                  consumer_key, consumer_secret,
-                 request_token_params=None):
+                 request_token_params=None,
+                 access_token_method='GET'):
         self.oauth = oauth
         #: the `base_url` all URLs are joined with.
         self.base_url = base_url
@@ -161,6 +183,7 @@ class OAuthRemoteApp(object):
         self.consumer_secret = consumer_secret
         self.tokengetter_func = None
         self.request_token_params = request_token_params or {}
+        self.access_token_method = access_token_method
         self._consumer = oauth2.Consumer(self.consumer_key,
                                          self.consumer_secret)
         self._client = OAuthClient(self._consumer)
@@ -300,6 +323,46 @@ class OAuthRemoteApp(object):
         self.tokengetter_func = f
         return f
 
+    def handle_oauth1_response(self):
+        """Handles an oauth1 authorization response.  The return value of
+        this method is forwarded as first argument to the handling view
+        function.
+        """
+        client = self.make_client()
+        resp, content = client.request('%s?oauth_verifier=%s' % (
+            self.expand_url(self.access_token_url),
+            request.args['oauth_verifier']
+        ), self.access_token_method)
+        data = parse_response(resp, content)
+        if resp['status'] != '200':
+            raise OAuthException('Invalid response from ' + self.name, data)
+        return data
+
+    def handle_oauth2_response(self):
+        """Handles an oauth2 authorization response.  The return value of
+        this method is forwarded as first argument to the handling view
+        function.
+        """
+        remote_args = {
+            'code':             request.args.get('code'),
+            'client_id':        self.consumer_key,
+            'client_secret':    self.consumer_secret,
+            'redirect_uri':     session.get(self.name + '_oauthredir')
+        }
+        url = add_query(self.expand_url(self.access_token_url), remote_args)
+        resp, content = self._client.request(url, self.access_token_method)
+        data = parse_response(resp, content)
+        if resp['status'] != '200':
+            raise OAuthException('Invalid response from ' + self.name, data)
+        return data
+
+    def handle_unknown_response(self):
+        """Called if an unknown response came back from the server.  This
+        usually indicates a denied response.  The default implementation
+        just returns `None`.
+        """
+        return None
+
     def authorized_handler(self, f):
         """Injects additional authorization functionality into the function.
         The function will be passed the response object as first argument
@@ -310,26 +373,11 @@ class OAuthRemoteApp(object):
         @wraps(f)
         def decorated(*args, **kwargs):
             if 'oauth_verifier' in request.args:
-                client = self.make_client()
-                resp, content = client.request('%s?oauth_verifier=%s' % (
-                    self.expand_url(self.access_token_url),
-                    request.args['oauth_verifier']
-                ), 'GET')
-                if resp['status'] != '200':
-                    raise OAuthException('Invalid response from ' + self.name)
-                data = parse_response(resp, content)
+                data = self.handle_oauth1_response()
             elif 'code' in request.args:
-                fb_args = {
-                    'code':             request.args.get('code'),
-                    'client_id':        self.consumer_key,
-                    'client_secret':    self.consumer_secret,
-                    'redirect_uri':     session.get(self.name + '_oauthredir')
-                }
-                url = add_query(self.expand_url(self.access_token_url), fb_args)
-                resp, content = self._client.request(url, 'GET')
-                data = parse_response(resp, content)
+                data = self.handle_oauth2_response()
             else:
-                data = None
+                data = self.handle_unknown_response()
             self.free_request_token()
             return f(*((data,) + args), **kwargs)
         return decorated
