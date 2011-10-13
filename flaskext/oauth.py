@@ -292,7 +292,7 @@ class OAuthRemoteApp(object):
         session.pop(self.name + '_oauthtok', None)
         session.pop(self.name + '_oauthredir', None)
 
-    def authorize(self, callback=None):
+    def authorize(self, callback=None, extra_params=None):
         """Returns a redirect response to the remote authorization URL with
         the signed callback given.  The callback must be `None` in which
         case the application will most likely switch to PIN based authentication
@@ -308,7 +308,8 @@ class OAuthRemoteApp(object):
             # This is for things like facebook's oauth.  Since we need the
             # callback for the access_token_url we need to keep it in the
             # session.
-            params = dict(self.request_token_params)
+            params = extra_params or {}
+            params.update(dict(self.request_token_params))
             params['redirect_uri'] = callback
             params['client_id'] = self.consumer_key
             session[self.name + '_oauthredir'] = callback
