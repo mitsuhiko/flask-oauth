@@ -216,15 +216,15 @@ class OAuthRemoteApp(object):
         kwargs['method'] = 'DELETE'
         return self.request(*args, **kwargs)
 
-    def make_client(self):
+    def make_client(self, token=None):
         """Creates a new `oauth2` Client object with the token attached.
         Usually you don't have to do that but use the :meth:`request`
         method instead.
         """
-        return oauth2.Client(self._consumer, self.get_request_token())
+        return oauth2.Client(self._consumer, self.get_request_token(token))
 
     def request(self, url, data=None, headers=None, format='urlencoded',
-                method='GET', content_type=None):
+                method='GET', content_type=None, token=None):
         """Sends a request to the remote server with OAuth tokens attached.
         The `url` is joined with :attr:`base_url` if the URL is relative.
 
@@ -242,10 +242,16 @@ class OAuthRemoteApp(object):
         :param content_type: an optional content type.  If a content type is
                              provided, the data is passed as it and the
                              `format` parameter is ignored.
+        :param token: an optional token to pass to tokengetter. Use this if you
+                      want to support sending requests using multiple tokens.
+                      If you set this to anything not None, `tokengetter_func`
+                      will receive the given token as an argument, in which case
+                      the tokengetter should return the `(token, secret)` tuple
+                      for the given token.
         :return: an :class:`OAuthResponse` object.
         """
         headers = dict(headers or {})
-        client = self.make_client()
+        client = self.make_client(token)
         url = self.expand_url(url)
         if method == 'GET':
             assert format == 'urlencoded'
@@ -279,9 +285,18 @@ class OAuthRemoteApp(object):
         session[self.name + '_oauthtok'] = tup
         return tup
 
-    def get_request_token(self):
+    def get_request_token(self, token):
         assert self.tokengetter_func is not None, 'missing tokengetter function'
-        rv = self.tokengetter_func()
+
+        # In order to remain backwards-compatible with Flask-OAuth<=0.11, we
+        # should not call self.tokengetter_func(token) here, since earlier
+        # versions do not expect the token argument.  However, if it is given
+        # explicitly with the request, we can construct the args list and pass
+        # the token argument only when it is given.
+        args = []
+        if token:
+            args.append(token)
+        rv = self.tokengetter_func(*args)
         if rv is None:
             rv = session.get(self.name + '_oauthtok')
             if rv is None:
