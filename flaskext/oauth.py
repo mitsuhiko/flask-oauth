@@ -161,6 +161,8 @@ class OAuthRemoteApp(object):
                                  to forward to the request token URL
                                  or authorize URL depending on oauth
                                  version.
+    :param access_token_params: an optional dictionary of parameters
+                                 to forward to the access token URL
     :param access_token_method: the HTTP method that should be used
                                 for the access_token_url.  Defaults
                                 to ``'GET'``.
@@ -171,6 +173,7 @@ class OAuthRemoteApp(object):
                  access_token_url, authorize_url,
                  consumer_key, consumer_secret,
                  request_token_params=None,
+                 access_token_params=None,
                  access_token_method='GET'):
         self.oauth = oauth
         #: the `base_url` all URLs are joined with.
@@ -183,6 +186,7 @@ class OAuthRemoteApp(object):
         self.consumer_secret = consumer_secret
         self.tokengetter_func = None
         self.request_token_params = request_token_params or {}
+        self.access_token_params = access_token_params or {}
         self.access_token_method = access_token_method
         self._consumer = oauth2.Consumer(self.consumer_key,
                                          self.consumer_secret)
@@ -247,6 +251,13 @@ class OAuthRemoteApp(object):
         headers = dict(headers or {})
         client = self.make_client()
         url = self.expand_url(url)
+
+        # Add required token for OAuth 2 requests since the base python-oauth
+        # library does not yet support OAuth 2.
+        if client.token.key and len(client.token.secret) == 0:
+            oauth2_token = { 'access_token': client.token.key }
+            data = data.update(oauth2_token) if data else oauth2_token
+
         if method == 'GET':
             assert format == 'urlencoded'
             if data is not None:
@@ -257,6 +268,7 @@ class OAuthRemoteApp(object):
                 data, content_type = encode_request_data(data, format)
             if content_type is not None:
                 headers['Content-Type'] = content_type
+
         return OAuthResponse(*client.request(url, method=method,
                                              body=data or '',
                                              headers=headers))
@@ -349,8 +361,16 @@ class OAuthRemoteApp(object):
             'client_secret':    self.consumer_secret,
             'redirect_uri':     session.get(self.name + '_oauthredir')
         }
-        url = add_query(self.expand_url(self.access_token_url), remote_args)
-        resp, content = self._client.request(url, self.access_token_method)
+        remote_args.update(self.access_token_params)
+
+        if self.access_token_method == 'GET':
+            url = add_query(self.expand_url(self.access_token_url), remote_args)
+            resp, content = self._client.request(url, self.access_token_method)
+            data = None
+        else:
+            url = self.access_token_url
+            data, content_type = encode_request_data(remote_args, 'urlencoded')
+        resp, content = self._client.request(url, method=self.access_token_method, body=data or '')            
         data = parse_response(resp, content)
         if resp['status'] != '200':
             raise OAuthException('Invalid response from ' + self.name, data)
