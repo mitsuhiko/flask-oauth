@@ -96,7 +96,8 @@ class OAuthClient(oauth2.Client):
             params['oauth_callback'] = callback
         req = oauth2.Request.from_consumer_and_token(
             self.consumer, token=self.token,
-            http_method='POST', http_url=uri, parameters=params)
+            http_method='POST', http_url=uri, parameters=params,
+            is_form_encoded=True)
         req.sign_request(self.method, self.consumer, self.token)
         body = req.to_postdata()
         headers = {
