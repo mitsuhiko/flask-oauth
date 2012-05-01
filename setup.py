@@ -16,15 +16,14 @@ from setuptools import setup
 
 setup(
     name='Flask-OAuth',
-    version='0.11',
+    version='0.12',
     url='http://github.com/mitsuhiko/flask-oauth',
     license='BSD',
     author='Armin Ronacher',
     author_email='armin.ronacher@active-4.com',
     description='Adds OAuth support to Flask',
     long_description=__doc__,
-    packages=['flaskext'],
-    namespace_packages=['flaskext'],
+    py_modules=['flask_oauth'],
     zip_safe=False,
     platforms='any',
     install_requires=[
