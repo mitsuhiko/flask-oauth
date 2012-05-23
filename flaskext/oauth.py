@@ -271,7 +271,7 @@ class OAuthRemoteApp(object):
         resp, content = self._client.request_new_token(
             self.expand_url(self.request_token_url), callback,
                 self.request_token_params)
-        if resp['status'] != '200':
+        if int(resp['status']) >= 300:
             raise OAuthException('Failed to generate request token')
         data = parse_response(resp, content)
         if data is None:
@@ -335,7 +335,7 @@ class OAuthRemoteApp(object):
             request.args['oauth_verifier']
         ), self.access_token_method)
         data = parse_response(resp, content)
-        if resp['status'] != '200':
+        if int(resp['status']) >= 300:
             raise OAuthException('Invalid response from ' + self.name, data)
         return data
 
@@ -353,7 +353,7 @@ class OAuthRemoteApp(object):
         url = add_query(self.expand_url(self.access_token_url), remote_args)
         resp, content = self._client.request(url, self.access_token_method)
         data = parse_response(resp, content)
-        if resp['status'] != '200':
+        if int(resp['status']) >= 300:
             raise OAuthException('Invalid response from ' + self.name, data)
         return data
 
