@@ -351,7 +351,10 @@ class OAuthRemoteApp(object):
             'redirect_uri':     session.get(self.name + '_oauthredir')
         }
         url = add_query(self.expand_url(self.access_token_url), remote_args)
-        resp, content = self._client.request(url, self.access_token_method)
+        body = ''
+        if self.access_token_method == "POST":
+            body = url_encode(remote_args)
+        resp, content = self._client.request(url, self.access_token_method, body=body)
         data = parse_response(resp, content)
         if resp['status'] != '200':
             raise OAuthException('Invalid response from ' + self.name, data)
