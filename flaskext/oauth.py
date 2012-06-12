@@ -355,8 +355,16 @@ class OAuthRemoteApp(object):
             'redirect_uri':     session.get(self.name + '_oauthredir')
         }
         remote_args.update(self.access_token_params)
-        url = add_query(self.expand_url(self.access_token_url), remote_args)
-        resp, content = self._client.request(url, self.access_token_method)
+        if self.access_token_method == 'POST':
+            resp, content = self._client.request(self.access_token_url,
+                                                 self.access_token_method,
+                                                 url_encode(remote_args))
+        elif self.access_token_method == 'GET':
+            url = add_query(self.expand_url(self.access_token_url), remote_args)
+            resp, content = self._client.request(url, self.access_token_method)
+        else:
+            raise OAuthException('Unsupported access_token_method: ' +
+                                 self.access_token_method)
         data = parse_response(resp, content)
         if resp['status'] != '200':
             raise OAuthException('Invalid response from ' + self.name, data)
