@@ -172,7 +172,8 @@ class OAuthRemoteApp(object):
                  access_token_url, authorize_url,
                  consumer_key, consumer_secret,
                  request_token_params=None,
-                 access_token_method='GET'):
+                 access_token_method='GET',
+                 access_token_params=None):
         self.oauth = oauth
         #: the `base_url` all URLs are joined with.
         self.base_url = base_url
@@ -184,6 +185,7 @@ class OAuthRemoteApp(object):
         self.consumer_secret = consumer_secret
         self.tokengetter_func = None
         self.request_token_params = request_token_params or {}
+        self.access_token_params = access_token_params or {}
         self.access_token_method = access_token_method
         self._consumer = oauth2.Consumer(self.consumer_key,
                                          self.consumer_secret)
@@ -350,8 +352,16 @@ class OAuthRemoteApp(object):
             'client_secret':    self.consumer_secret,
             'redirect_uri':     session.get(self.name + '_oauthredir')
         }
-        url = add_query(self.expand_url(self.access_token_url), remote_args)
-        resp, content = self._client.request(url, self.access_token_method)
+        remote_args.update(self.access_token_params)
+        if self.access_token_method == 'GET':
+            url = add_query(self.expand_url(self.access_token_url), remote_args)
+            body = ''
+        else:
+            url = self.expand_url(self.access_token_url)
+            body = url_encode(remote_args)
+
+        resp, content = self._client.request(url, self.access_token_method,
+                body=body)
         data = parse_response(resp, content)
         if resp['status'] != '200':
             raise OAuthException('Invalid response from ' + self.name, data)
