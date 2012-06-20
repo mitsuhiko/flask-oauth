@@ -254,7 +254,7 @@ class OAuthRemoteApp(object):
         url = self.expand_url(url)
         if method == 'GET':
             assert format == 'urlencoded'
-            if not data:
+            if data:
                 url = add_query(url, data)
                 data = ""
         else:
