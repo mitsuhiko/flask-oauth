@@ -1,5 +1,5 @@
 from flask import Flask, redirect, url_for, session, request
-from flaskext.oauth import OAuth
+from flask.ext.oauth import OAuth
 
 
 SECRET_KEY = 'development key'
