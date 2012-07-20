@@ -1,6 +1,6 @@
 from flask import Flask, request, redirect, url_for, session, flash, g, \
      render_template
-from flaskext.oauth import OAuth
+from flask.ext.oauth import OAuth
 
 from sqlalchemy import create_engine, Column, Integer, String
 from sqlalchemy.orm import scoped_session, sessionmaker

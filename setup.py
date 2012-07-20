@@ -23,8 +23,7 @@ setup(
     author_email='armin.ronacher@active-4.com',
     description='Adds OAuth support to Flask',
     long_description=__doc__,
-    packages=['flaskext'],
-    namespace_packages=['flaskext'],
+    py_modules=['flask_oauth'],
     zip_safe=False,
     platforms='any',
     install_requires=[
