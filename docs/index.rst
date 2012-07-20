@@ -1,7 +1,7 @@
 Flask-OAuth
 ===========
 
-.. module:: flaskext.oauth
+.. module:: flask_oauth
 
 Flask-OAuth is an extension to `Flask`_ that allows you to interact with
 remote `OAuth`_ enabled applications.  Currently it only implements the
