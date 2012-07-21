@@ -5,17 +5,17 @@ Flask-OAuth
 
 Flask-OAuth is an extension to `Flask`_ that allows you to interact with
 remote `OAuth`_ enabled applications.  Currently it only implements the
-consumer interface so you cannot expose your own API with OAuth.  It
-depends on the `python-oauth2`_ module.  You can install the requirements
-from PyPI with `easy_install` or `pip` or download them by hand.
+consumer interface so you cannot expose your own API with OAuth.
+
+Flak-OAuth depends on the `python-oauth2`_ module.
 
 Features
 --------
 
-- support for OAuth 1.0a
-- friendly API
-- direct integration with Flask
-- basic support for remote method invocation of RESTful APIs
+- Support for OAuth 1.0a
+- Friendly API
+- Direct integration with Flask
+- Basic support for remote method invocation of RESTful APIs
 
 Installation
 ------------
@@ -24,7 +24,7 @@ Install the extension with one of the following commands::
 
     $ pip install Flask-OAuth
 
-or alternatively if you have `easy_install` installed::
+Alternatively, use `easy_install`::
 
     $ easy_install Flask-OAuth
 
@@ -35,8 +35,8 @@ or alternatively if you have `easy_install` installed::
 Defining Remote Applications
 ----------------------------
 
-To connect to a remote application you need to create a :class:`OAuth`
-object and register a remote application on it.  This can be done with
+To connect to a remote application create a :class:`OAuth`
+object and register a remote application on it using
 the :meth:`~OAuth.remote_app` method::
 
     oauth = OAuth()
@@ -45,17 +45,20 @@ the :meth:`~OAuth.remote_app` method::
     )
 
 A remote application must define several URLs required by the
-OAuth machinery: `request_token_url`, `access_token_url`, and
-`authorize_url`.  You will most likely get these values by
-registering your own application on the developer page of the remote
-application you want to connect with.  Additionally a per-application
-issued `consumer_key` and `consumer_secret` are needed.
+OAuth machinery:
+
+- `request_token_url`
+- `access_token_url`
+- `authorize_url` 
+
+Additionally the application should define an issued `consumer_key`
+and `consumer_secret`.
+
+You can find these values by registering your application with the remote
+application you want to connect with.
 
 Additionally you can provide a `base_url` that is prefixed to *all*
-relative URLs used in the remote app.  This would also affect the
-`request_token_url` but because the prefix for `oauth` and the regular
-twitter API are different one has to provide absolute URLs for the OAuth
-token and authenticate methods.
+relative URLs used in the remote app.
 
 For Twitter the setup would look like this::
 
@@ -68,18 +71,11 @@ For Twitter the setup would look like this::
         consumer_secret='<your secret here>'
     )
 
-Twitter supports two authorization urls: ``/authenticate`` and
-``/authorize``.  The only difference is what interface is presented to the user.
-``/authenticate`` should be used if the intent of OAuth is to
-use the Twitter identity of the user to sign in to your own website.
-``/authorize`` should be used if intent of OAuth is to access the Twitter API (and
-not use the user profile on your own website).
-
 Now that the application is created one can start using the OAuth system.
 One thing is missing: the tokengetter. OAuth uses a token and a secret to
 figure out who is connecting to the remote application.  After
 authentication/authorization this information is passed to a function on
-your side and it's your responsibility to remember it.
+your side and it is your responsibility to remember it.
 
 The following rules apply:
 
@@ -93,7 +89,7 @@ The following rules apply:
     issued. Your tokengetter is not used during that period.
 
 For a simple test application, storing that information in the session is
-probably good enough::
+probably sufficient::
 
     from flask import session
 
@@ -101,7 +97,7 @@ probably good enough::
     def get_twitter_token():
         return session.get('twitter_token')
 
-Note that the function must return `None` if the token does not exist, and
+If the token does not exist, the function must return `None`, and
 otherwise return a tuple in the form ``(token, secret)``.
 
 Signing in / Authorizing
@@ -117,8 +113,8 @@ redirected back to. For example::
         return twitter.authorize(callback=url_for('oauth_authorized',
             next=request.args.get('next') or request.referrer or None))
 
-If the application redirects back, Twitter will have passed all the relevant
-information to the `oauth_authorized` function: a special
+If the application redirects back, the remote application will have passed all
+relevant information to the `oauth_authorized` function: a special
 response object with all the data, or ``None`` if the user denied the
 request.  This function must be decorated as
 :meth:`~OAuthRemoteApp.authorized_handler`::
@@ -145,7 +141,7 @@ request.  This function must be decorated as
 We store the token and the associated secret in the session so that the
 tokengetter can return it.  Additionally we also store the Twitter username
 that was sent back to us so that we can later display it to the user.  In
-larger applications it is recommended to store sattelite information in a
+larger applications it is recommended to store satellite information in a
 database instead to ease debugging and more easily handle additional information
 associated with the user.
 
