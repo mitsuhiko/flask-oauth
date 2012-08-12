@@ -356,7 +356,7 @@ class OAuthRemoteApp(object):
         }
         remote_args.update(self.access_token_params)
         if self.access_token_method == 'POST':
-            resp, content = self._client.request(self.access_token_url,
+            resp, content = self._client.request(self.expand_url(self.access_token_url),
                                                  self.access_token_method,
                                                  url_encode(remote_args))
         elif self.access_token_method == 'GET':
