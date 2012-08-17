@@ -230,6 +230,73 @@ Unknown incoming data is stored as string.  If outgoing data of a different
 format should be used, a `content_type` can be specified instead and the
 data provided a encoded string.
 
+Using Flask Config for Consumer Keys and Secrets
+------------------------------------------------
+
+In the examples above, the consumer key and secret were provided directly to
+the `OAuthRemoteApp` constructor, in line. It is also possible to specify this
+information in the Flask application object's configuration. This is helpful
+when you need more than one set of keys (perhaps for both a test and 
+production environment).
+
+To specify a consumer key and consumer secret in your Flask application
+configuration, use the following patterns:
+
+- Consumer Key: ``(NAME)_CONSUMER_KEY``
+- Consumer Secret: ``(NAME)_CONSUMER_SECRET``
+
+Where ``(NAME)`` is the upper-cased version of the `name` provided when
+constructing the `OAuthRemoteApp`.
+
+To pass in your Flask application object, there are two general approaches
+(both of which closely follow the pattern set by other Flask extensions).
+
+**Providing the Flask application object to the OAuth constructor**
+
+This is helpful when you simply want to specify consumer keys and consumer
+secrets in one central location::
+
+    app = Flask(__name__)
+    app.config.update(
+        'TWITTER_CONSUMER_KEY': '<your key here>',
+        'TWITTER_CONSUMER_SECRET': '<your secret here>'
+    )
+
+    oauth = OAuth(app)
+    twitter = oauth.remote_app('twitter',
+        base_url='https://api.twitter.com/1/',
+        request_token_url='https://api.twitter.com/oauth/request_token',
+        access_token_url='https://api.twitter.com/oauth/access_token',
+        authorize_url='https://api.twitter.com/oauth/authenticate'
+    )
+
+**Providing the Flask application object using init_flask**
+
+This is helpful when you do not have your Flask application object available at
+import-time. This normally happens when you create your application object in
+an `application factory`_::
+
+    app = Flask(__name__)
+    app.config.update(
+        'TWITTER_CONSUMER_KEY': '<your key here>',
+        'TWITTER_CONSUMER_SECRET': ''<your secret here>'
+    )
+
+    oauth = OAuth()
+    twitter = oauth.remote_app('twitter',
+        base_url='https://api.twitter.com/1/',
+        request_token_url='https://api.twitter.com/oauth/request_token',
+        access_token_url='https://api.twitter.com/oauth/access_token',
+        authorize_url='https://api.twitter.com/oauth/authenticate'
+    )
+
+    oauth.init_flask(app)
+
+.. _application factory: http://flask.pocoo.org/docs/patterns/appfactories/
+
+If you happen to provide a consumer key and secret to both your Flask
+application configuration and the `oauth.remote_app` constructor, the values
+passed to `oauth.remote_app` will override any configuration values.
 
 API Reference
 -------------
