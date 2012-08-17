@@ -159,7 +159,7 @@ class OAuth(object):
         and secrets set in the Flask config.
         """
         self.flask = flask
-        for remote_app in self.remote_apps().values():
+        for remote_app in self.remote_apps.values():
             remote_app.init_flask(flask)
 
 
