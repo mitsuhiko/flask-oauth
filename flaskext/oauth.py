@@ -129,10 +129,13 @@ class OAuthException(RuntimeError):
 class OAuth(object):
     """Registry for remote applications.  In the future this will also
     be the central class for OAuth provider functionality.
+    :param flask: the Flask application object that will be read for
+    consumer keys and consumer secrets.
     """
 
-    def __init__(self):
+    def __init__(self, flask=None):
         self.remote_apps = {}
+        self.flask = flask
 
     def remote_app(self, name, register=True, **kwargs):
         """Registers a new remote applicaton.  If `param` register is
@@ -140,12 +143,24 @@ class OAuth(object):
         :attr:`remote_apps` dictionary.  The keyword arguments are
         forwarded to the :class:`OAuthRemoteApp` consturctor.
         """
+        if self.flask and 'flask' not in kwargs:
+            kwargs['flask'] = self.flask
+
         app = OAuthRemoteApp(self, name, **kwargs)
         if register:
             assert name not in self.remote_apps, \
                 'application already registered'
             self.remote_apps[name] = app
         return app
+
+    def init_flask(self, flask):
+        """Associates this :class:`OAuth` object with a Flask application
+        object so that existing and future remote apps will use consumer keys
+        and secrets set in the Flask config.
+        """
+        self.flask = flask
+        for remote_app in self.remote_apps.values():
+            remote_app.init_flask(flask)
 
 
 class OAuthRemoteApp(object):
@@ -156,8 +171,10 @@ class OAuthRemoteApp(object):
     :param request_token_url: the URL for requesting new tokens
     :param access_token_url: the URL for token exchange
     :param authorize_url: the URL for authorization
-    :param consumer_key: the application specific consumer key
-    :param consumer_secret: the application specific consumer secret
+    :param consumer_key: the application specific consumer key. Optional when
+                         providing a Flask application object.
+    :param consumer_secret: the application specific consumer secret. Optional
+                            when providing a Flask application object.
     :param request_token_params: an optional dictionary of parameters
                                  to forward to the request token URL
                                  or authorize URL depending on oauth
@@ -167,15 +184,20 @@ class OAuthRemoteApp(object):
     :param access_token_method: the HTTP method that should be used
                                 for the access_token_url.  Defaults
                                 to ``'GET'``.
+    :param flask: the Flask application object that will be used to configure
+                  the :attr:`consumer_key` and :attr:`consumer_secret`, if are
+                  not provided as parameters to this constructor.
     """
 
     def __init__(self, oauth, name, base_url,
                  request_token_url,
                  access_token_url, authorize_url,
-                 consumer_key, consumer_secret,
+                 consumer_key = None,
+                 consumer_secret = None,
                  request_token_params=None,
                  access_token_params=None,
-                 access_token_method='GET'):
+                 access_token_method='GET',
+                 flask=None):
         self.oauth = oauth
         #: the `base_url` all URLs are joined with.
         self.base_url = base_url
@@ -189,9 +211,14 @@ class OAuthRemoteApp(object):
         self.request_token_params = request_token_params or {}
         self.access_token_params = access_token_params or {}
         self.access_token_method = access_token_method
-        self._consumer = oauth2.Consumer(self.consumer_key,
-                                         self.consumer_secret)
-        self._client = OAuthClient(self._consumer)
+
+        if self.consumer_key is not None and self.consumer_secret is not None:
+            self.make_consumer()
+        elif flask is not None:
+            self.init_flask(flask)
+        else:
+            self._consumer = None
+            self._client = None
 
     def get(self, *args, **kwargs):
         """Sends a ``GET`` request.  Accepts the same parameters as
@@ -226,6 +253,9 @@ class OAuthRemoteApp(object):
         Usually you don't have to do that but use the :meth:`request`
         method instead.
         """
+        if self._consumer is None:
+            self.make_consumer()
+
         return oauth2.Client(self._consumer, self.get_request_token())
 
     def request(self, url, data="", headers=None, format='urlencoded',
@@ -395,3 +425,33 @@ class OAuthRemoteApp(object):
             self.free_request_token()
             return f(*((data,) + args), **kwargs)
         return decorated
+
+    def init_flask(self, flask):
+        """Sets the :attr:`consumer_key` and :attr:`consumer_secret` set in a
+        Flask application object's config. If a :attr:`consumer_key` and
+        :attr:`consumer_secret` are already set, then any values from the Flask
+        config will be ignored. The config key is formatted using the
+        :attr:`name` attribute:
+
+            flask.config.get(name.upper() + '_CONSUMER_KEY')
+            flask.config.get(name.upper() + '_CONSUMER_SECRET')
+
+        :param flask: the Flask application object.
+        """
+        if self.consumer_key is None or self.consumer_secret is None:
+            self.consumer_key = flask.config.get(self.name.upper() +
+                '_CONSUMER_KEY')
+            self.consumer_secret = flask.config.get(self.name.upper() +
+                '_CONSUMER_SECRET')
+
+            self.make_consumer()
+
+    def make_consumer(self):
+        """Creates a new oauth2.Consumer based on the current
+        :attr:`consumer_key` and :attr:`consumer_secret`."""
+        assert self.consumer_key is not None or \
+               self.consumer_secret is not None, \
+               'missing consumer_key and consumer_secret'
+        self._consumer = oauth2.Consumer(self.consumer_key,
+            self.consumer_secret)
+        self._client = OAuthClient(self._consumer)
