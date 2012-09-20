@@ -41,8 +41,8 @@ def parse_response(resp, content, strict=False):
         return json.loads(content)
     elif ct in ('application/xml', 'text/xml'):
         # technically, text/xml is ascii based but because many
-        # implementations get that wrong and utf-8 is a superst
-        # of utf-8 anyways, there is not much harm in assuming
+        # implementations get that wrong and utf-8 is a superset
+        # of ascii anyways, there is not much harm in assuming
         # utf-8 here
         charset = options.get('charset', 'utf-8')
         return get_etree().fromstring(content.decode(charset))
