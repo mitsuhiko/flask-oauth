@@ -96,7 +96,8 @@ class OAuthClient(oauth2.Client):
             params['oauth_callback'] = callback
         req = oauth2.Request.from_consumer_and_token(
             self.consumer, token=self.token,
-            http_method='POST', http_url=uri, parameters=params)
+            http_method='POST', http_url=uri, parameters=params,
+            is_form_encoded=True)
         req.sign_request(self.method, self.consumer, self.token)
         body = req.to_postdata()
         headers = {
@@ -164,6 +165,8 @@ class OAuthRemoteApp(object):
                                  to forward to the request token URL
                                  or authorize URL depending on oauth
                                  version.
+    :param access_token_params: an option diction of parameters to forward to
+                                the access token URL
     :param access_token_method: the HTTP method that should be used
                                 for the access_token_url.  Defaults
                                 to ``'GET'``.
@@ -174,6 +177,7 @@ class OAuthRemoteApp(object):
                  access_token_url, authorize_url,
                  consumer_key, consumer_secret,
                  request_token_params=None,
+                 access_token_params=None,
                  access_token_method='GET'):
         self.oauth = oauth
         #: the `base_url` all URLs are joined with.
@@ -186,6 +190,7 @@ class OAuthRemoteApp(object):
         self.consumer_secret = consumer_secret
         self.tokengetter_func = None
         self.request_token_params = request_token_params or {}
+        self.access_token_params = access_token_params or {}
         self.access_token_method = access_token_method
         self._consumer = oauth2.Consumer(self.consumer_key,
                                          self.consumer_secret)
@@ -226,7 +231,7 @@ class OAuthRemoteApp(object):
         """
         return oauth2.Client(self._consumer, self.get_request_token())
 
-    def request(self, url, data=None, headers=None, format='urlencoded',
+    def request(self, url, data="", headers=None, format='urlencoded',
                 method='GET', content_type=None):
         """Sends a request to the remote server with OAuth tokens attached.
         The `url` is joined with :attr:`base_url` if the URL is relative.
@@ -252,9 +257,9 @@ class OAuthRemoteApp(object):
         url = self.expand_url(url)
         if method == 'GET':
             assert format == 'urlencoded'
-            if data is not None:
+            if data:
                 url = add_query(url, data)
-                data = None
+                data = ""
         else:
             if content_type is None:
                 data, content_type = encode_request_data(data, format)
@@ -356,8 +361,17 @@ class OAuthRemoteApp(object):
             'client_secret':    self.consumer_secret,
             'redirect_uri':     session.get(self.name + '_oauthredir')
         }
-        url = add_query(self.expand_url(self.access_token_url), remote_args)
-        resp, content = self._client.request(url, self.access_token_method)
+        remote_args.update(self.access_token_params)
+        if self.access_token_method == 'POST':
+            resp, content = self._client.request(self.expand_url(self.access_token_url),
+                                                 self.access_token_method,
+                                                 url_encode(remote_args))
+        elif self.access_token_method == 'GET':
+            url = add_query(self.expand_url(self.access_token_url), remote_args)
+            resp, content = self._client.request(url, self.access_token_method)
+        else:
+            raise OAuthException('Unsupported access_token_method: ' +
+                                 self.access_token_method)
         data = parse_response(resp, content)
         if resp['status'] != '200':
             raise OAuthException('Invalid response from ' + self.name,
