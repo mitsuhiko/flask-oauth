@@ -339,6 +339,7 @@ class OAuthRemoteApp(object):
             params = dict(self.request_token_params)
             params['redirect_uri'] = callback
             params['client_id'] = self.consumer_key
+            params['response_type'] = 'code'
             session[self.name + '_oauthredir'] = callback
             url = add_query(self.expand_url(self.authorize_url), params)
 
