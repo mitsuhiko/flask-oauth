@@ -196,6 +196,13 @@ class OAuthRemoteApp(object):
                                          self.consumer_secret)
         self._client = OAuthClient(self._consumer)
 
+    def status_okay(self, resp):
+        """Given request data, checks if the status is okay."""
+        try:
+            return int(resp['status']) in (200, 201)
+        except ValueError:
+            return False
+
     def get(self, *args, **kwargs):
         """Sends a ``GET`` request.  Accepts the same parameters as
         :meth:`request`.
@@ -278,7 +285,7 @@ class OAuthRemoteApp(object):
         resp, content = self._client.request_new_token(
             self.expand_url(self.request_token_url), callback,
                 self.request_token_params)
-        if resp['status'] != '200':
+        if not self.status_okay(resp):
             raise OAuthException('Failed to generate request token',
                                  type='token_generation_failed')
         data = parse_response(resp, content)
@@ -345,7 +352,7 @@ class OAuthRemoteApp(object):
             request.args['oauth_verifier']
         ), self.access_token_method)
         data = parse_response(resp, content)
-        if resp['status'] != '200':
+        if not self.status_okay(resp):
             raise OAuthException('Invalid response from ' + self.name,
                                  type='invalid_response', data=data)
         return data
@@ -373,7 +380,7 @@ class OAuthRemoteApp(object):
             raise OAuthException('Unsupported access_token_method: ' +
                                  self.access_token_method)
         data = parse_response(resp, content)
-        if resp['status'] != '200':
+        if not self.status_okay(resp):
             raise OAuthException('Invalid response from ' + self.name,
                                  type='invalid_response', data=data)
         return data
