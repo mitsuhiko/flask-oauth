@@ -1,5 +1,5 @@
 from flask import Flask, redirect, url_for, session
-from flaskext.oauth import OAuth
+from flask_oauth import OAuth
 
 
 # You must configure these 3 values from Google APIs console
