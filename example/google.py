@@ -42,7 +42,11 @@ def index():
                   None, headers)
     try:
         res = urlopen(req)
-    except URLError:
+    except URLError, e:
+        if e.code == 401:
+            # Unauthorized - bad token
+            session.pop('access_token', None)
+            return redirect(url_for('login'))
         return res.read()
 
     return res.read()
