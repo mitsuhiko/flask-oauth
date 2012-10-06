@@ -11,7 +11,7 @@
 import httplib2
 from functools import wraps
 from urlparse import urljoin
-from flask import request, session, json, redirect
+from flask import request, session, json, redirect, Response
 from werkzeug import url_decode, url_encode, url_quote, \
      parse_options_header, Headers
 import oauth2
@@ -110,10 +110,13 @@ class OAuthClient(oauth2.Client):
 class OAuthException(RuntimeError):
     """Raised if authorization fails for some reason."""
     message = None
+    type = None
 
-    def __init__(self, message, data=None):
+    def __init__(self, message, type=None, data=None):
         #: A helpful error message for debugging
         self.message = message
+        #: A unique type for this exception if available.
+        self.type = type
         #: If available, the parsed data from the remote API that can be
         #: used to pointpoint the error.
         self.data = data
@@ -271,10 +274,12 @@ class OAuthRemoteApp(object):
             self.expand_url(self.request_token_url), callback,
                 self.request_token_params)
         if resp['status'] != '200':
-            raise OAuthException('Failed to generate request token')
+            raise OAuthException('Failed to generate request token',
+                                 type='token_generation_failed')
         data = parse_response(resp, content)
         if data is None:
-            raise OAuthException('Invalid token response from ' + self.name)
+            raise OAuthException('Invalid token response from ' + self.name,
+                                 type='token_generation_failed')
         tup = (data['oauth_token'], data['oauth_token_secret'])
         session[self.name + '_oauthtok'] = tup
         return tup
@@ -285,7 +290,7 @@ class OAuthRemoteApp(object):
         if rv is None:
             rv = session.get(self.name + '_oauthtok')
             if rv is None:
-                raise OAuthException('No token available')
+                raise OAuthException('No token available', type='token_missing')
         return oauth2.Token(*rv)
 
     def free_request_token(self):
@@ -313,6 +318,7 @@ class OAuthRemoteApp(object):
             params['client_id'] = self.consumer_key
             session[self.name + '_oauthredir'] = callback
             url = add_query(self.expand_url(self.authorize_url), params)
+
         return redirect(url)
 
     def tokengetter(self, f):
@@ -335,7 +341,8 @@ class OAuthRemoteApp(object):
         ), self.access_token_method)
         data = parse_response(resp, content)
         if resp['status'] != '200':
-            raise OAuthException('Invalid response from ' + self.name, data)
+            raise OAuthException('Invalid response from ' + self.name,
+                                 type='invalid_response', data=data)
         return data
 
     def handle_oauth2_response(self):
@@ -353,7 +360,8 @@ class OAuthRemoteApp(object):
         resp, content = self._client.request(url, self.access_token_method)
         data = parse_response(resp, content)
         if resp['status'] != '200':
-            raise OAuthException('Invalid response from ' + self.name, data)
+            raise OAuthException('Invalid response from ' + self.name,
+                                 type='invalid_response', data=data)
         return data
 
     def handle_unknown_response(self):
