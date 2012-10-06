@@ -1,7 +1,7 @@
 Flask-OAuth
 ===========
 
-.. module:: flaskext.oauth
+.. module:: flask_oauth
 
 Flask-OAuth is an extension to `Flask`_ that allows you to interact with
 remote `OAuth`_ enabled applications.  Currently it only implements the
@@ -38,6 +38,8 @@ Defining Remote Applications
 To connect to a remote application create a :class:`OAuth`
 object and register a remote application on it using
 the :meth:`~OAuth.remote_app` method::
+
+    from flask_oauth import OAuth
 
     oauth = OAuth()
     the_remote_app = oauth.remote_app('the remote app',
