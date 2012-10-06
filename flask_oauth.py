@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-    flaskext.oauth
-    ~~~~~~~~~~~~~~
+    flask_oauth
+    ~~~~~~~~~~~
 
     Implements basic OAuth support for Flask.
 
