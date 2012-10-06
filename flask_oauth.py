@@ -231,17 +231,20 @@ class OAuthRemoteApp(object):
         kwargs['method'] = 'DELETE'
         return self.request(*args, **kwargs)
 
-    def make_client(self):
+    def make_client(self, token=None):
         """Creates a new `oauth2` Client object with the token attached.
         Usually you don't have to do that but use the :meth:`request`
         method instead.
         """
-        return oauth2.Client(self._consumer, self.get_request_token())
+        return oauth2.Client(self._consumer, self.get_request_token(token))
 
     def request(self, url, data="", headers=None, format='urlencoded',
-                method='GET', content_type=None):
+                method='GET', content_type=None, token=None):
         """Sends a request to the remote server with OAuth tokens attached.
         The `url` is joined with :attr:`base_url` if the URL is relative.
+
+        .. versionadded:: 0.12
+           added the `token` parameter.
 
         :param url: where to send the request to
         :param data: the data to be sent to the server.  If the request method
@@ -257,10 +260,16 @@ class OAuthRemoteApp(object):
         :param content_type: an optional content type.  If a content type is
                              provided, the data is passed as it and the
                              `format` parameter is ignored.
+        :param token: an optional token to pass to tokengetter. Use this if you
+                      want to support sending requests using multiple tokens.
+                      If you set this to anything not None, `tokengetter_func`
+                      will receive the given token as an argument, in which case
+                      the tokengetter should return the `(token, secret)` tuple
+                      for the given token.
         :return: an :class:`OAuthResponse` object.
         """
         headers = dict(headers or {})
-        client = self.make_client()
+        client = self.make_client(token)
         url = self.expand_url(url)
         if method == 'GET':
             assert format == 'urlencoded'
@@ -296,9 +305,11 @@ class OAuthRemoteApp(object):
         session[self.name + '_oauthtok'] = tup
         return tup
 
-    def get_request_token(self):
+    def get_request_token(self, token=None):
         assert self.tokengetter_func is not None, 'missing tokengetter function'
-        rv = self.tokengetter_func()
+        # Don't pass the token if the token is None to support old
+        # tokengetter functions.
+        rv = self.tokengetter_func(*(token and (token,) or ()))
         if rv is None:
             rv = session.get(self.name + '_oauthtok')
             if rv is None:
@@ -337,6 +348,17 @@ class OAuthRemoteApp(object):
         """Registers a function as tokengetter.  The tokengetter has to return
         a tuple of ``(token, secret)`` with the user's token and token secret.
         If the data is unavailable, the function must return `None`.
+
+        If the `token` parameter is passed to the request function it's
+        forwarded to the tokengetter function::
+
+            @oauth.tokengetter
+            def get_token(token='user'):
+                if token == 'user':
+                    return find_the_user_token()
+                elif token == 'app':
+                    return find_the_app_token()
+                raise RuntimeError('invalid token')
         """
         self.tokengetter_func = f
         return f

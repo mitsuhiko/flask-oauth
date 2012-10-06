@@ -94,11 +94,17 @@ probably sufficient::
     from flask import session
 
     @twitter.tokengetter
-    def get_twitter_token():
+    def get_twitter_token(token=None):
         return session.get('twitter_token')
 
 If the token does not exist, the function must return `None`, and
-otherwise return a tuple in the form ``(token, secret)``.
+otherwise return a tuple in the form ``(token, secret)``.  The function
+might also be passed a `token` parameter.  This is user defined and can be
+used to indicate another token.  Imagine for instance you want to support
+user and application tokens or different tokens for the same user.
+
+The name of the token can be passed to to the
+:meth:`~OAuthRemoteApp.request` function.
 
 Signing in / Authorizing
 ------------------------
