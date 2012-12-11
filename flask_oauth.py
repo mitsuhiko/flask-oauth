@@ -320,12 +320,14 @@ class OAuthRemoteApp(object):
         session.pop(self.name + '_oauthtok', None)
         session.pop(self.name + '_oauthredir', None)
 
-    def authorize(self, callback=None):
+    def authorize(self, callback=None, extra_params=None):
         """Returns a redirect response to the remote authorization URL with
         the signed callback given.  The callback must be `None` in which
         case the application will most likely switch to PIN based authentication
         or use a remotely stored callback URL.  Alternatively it's an URL
         on the system that has to be decorated as :meth:`authorized_handler`.
+        You can also pass any `extra_params` that will be added to the
+        authorization URL.
         """
         if self.request_token_url:
             token = self.generate_request_token(callback)[0]
@@ -340,6 +342,8 @@ class OAuthRemoteApp(object):
             params['redirect_uri'] = callback
             params['client_id'] = self.consumer_key
             params['response_type'] = 'code'
+            if extra_params:
+                params.update(extra_params)
             session[self.name + '_oauthredir'] = callback
             url = add_query(self.expand_url(self.authorize_url), params)
 
