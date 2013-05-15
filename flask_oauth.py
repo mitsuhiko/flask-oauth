@@ -279,6 +279,7 @@ class OAuthRemoteApp(object):
         :return: an :class:`OAuthResponse` object.
         """
         client = self.make_client(token)
+        url = self.expand_url(url)
         headers = dict(headers or {})
         if self.bearer_authorization_header:           
             headers['Authorization'] = '%s %s' % (self.bearer_authorization_header_prefix, client.token.key)
