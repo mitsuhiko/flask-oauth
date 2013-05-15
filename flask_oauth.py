@@ -170,6 +170,12 @@ class OAuthRemoteApp(object):
     :param access_token_method: the HTTP method that should be used
                                 for the access_token_url.  Defaults
                                 to ``'GET'``.
+    :param bearer_authorization_header: an parameter to automatically add 
+                                        an OAuth2 authentication header.
+                                        Checkout: http://tools.ietf.org/html/rfc6750#section-2.1
+                                        Defaults to False
+    :param bearer_authorization_header_prefix: the word between Authorization: and the access_token.
+                                               Defaults to ``'Bearer'``
     """
 
     def __init__(self, oauth, name, base_url,
@@ -178,7 +184,9 @@ class OAuthRemoteApp(object):
                  consumer_key, consumer_secret,
                  request_token_params=None,
                  access_token_params=None,
-                 access_token_method='GET'):
+                 access_token_method='GET',
+                 bearer_authorization_header=False,
+                 bearer_authorization_header_prefix='Bearer'):
         self.oauth = oauth
         #: the `base_url` all URLs are joined with.
         self.base_url = base_url
@@ -192,6 +200,8 @@ class OAuthRemoteApp(object):
         self.request_token_params = request_token_params or {}
         self.access_token_params = access_token_params or {}
         self.access_token_method = access_token_method
+        self.bearer_authorization_header = bearer_authorization_header
+        self.bearer_authorization_header_prefix = bearer_authorization_header_prefix
         self._consumer = oauth2.Consumer(self.consumer_key,
                                          self.consumer_secret)
         self._client = OAuthClient(self._consumer)
@@ -268,9 +278,11 @@ class OAuthRemoteApp(object):
                       for the given token.
         :return: an :class:`OAuthResponse` object.
         """
-        headers = dict(headers or {})
         client = self.make_client(token)
         url = self.expand_url(url)
+        headers = dict(headers or {})
+        if self.bearer_authorization_header:           
+            headers['Authorization'] = '%s %s' % (self.bearer_authorization_header_prefix, client.token.key)
         if method == 'GET':
             assert format == 'urlencoded'
             if data:

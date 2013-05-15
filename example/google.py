@@ -25,6 +25,10 @@ google = oauth.remote_app('google',
                           access_token_url='https://accounts.google.com/o/oauth2/token',
                           access_token_method='POST',
                           access_token_params={'grant_type': 'authorization_code'},
+                          #Add the OAuth2 authentication header, necessary for some OAuth provider (google, wordpress...)
+                          #Authorization: Bearer mF_9.B5f-4.1JqM
+                          bearer_authorization_header=True, #Default: False
+                          bearer_authorization_header_prefix='OAuth', #Default: 'Bearer'
                           consumer_key=GOOGLE_CLIENT_ID,
                           consumer_secret=GOOGLE_CLIENT_SECRET)
 
@@ -34,24 +38,17 @@ def index():
     if access_token is None:
         return redirect(url_for('login'))
 
-    access_token = access_token[0]
-    from urllib2 import Request, urlopen, URLError
+    req=google.get('https://www.googleapis.com/oauth2/v1/userinfo')
+    #Or use google+ api (with even more userdata :P )
+    #req=google.get('https://www.googleapis.com/plus/v1/people/me')
 
-    headers = {'Authorization': 'OAuth '+access_token}
-    req = Request('https://www.googleapis.com/oauth2/v1/userinfo',
-                  None, headers)
-    try:
-        res = urlopen(req)
-    except URLError, e:
-        if e.code == 401:
-            # Unauthorized - bad token
-            session.pop('access_token', None)
-            return redirect(url_for('login'))
-        return res.read()
-
-    return res.read()
-
-
+    if req.status == 200:
+      return req.raw_data
+    else:
+      session.pop('access_token', None)
+      return redirect(url_for('login'))
+        
+    
 @app.route('/login')
 def login():
     callback=url_for('authorized', _external=True)
