@@ -370,10 +370,12 @@ class OAuthRemoteApp(object):
         function.
         """
         client = self.make_client()
-        resp, content = client.request('%s?oauth_verifier=%s' % (
-            self.expand_url(self.access_token_url),
-            request.args['oauth_verifier']
-        ), self.access_token_method)
+        remote_args = {
+            'oauth_verifier': request.args['oauth_verifier']
+        }
+        remote_args.update(self.access_token_params)
+        url = add_query(self.expand_url(self.access_token_url), remote_args)
+        resp, content = client.request(url, self.access_token_method)
         data = parse_response(resp, content)
         if not self.status_okay(resp):
             raise OAuthException('Invalid response from ' + self.name,
