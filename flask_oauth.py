@@ -193,6 +193,7 @@ class OAuthRemoteApp(object):
         self.request_token_params = request_token_params or {}
         self.access_token_params = access_token_params or {}
         self.access_token_method = access_token_method
+        self.additional_certs = additional_certs
         self._consumer = oauth2.Consumer(self.consumer_key,
                                          self.consumer_secret)
         self._client = OAuthClient(self._consumer)
@@ -239,7 +240,10 @@ class OAuthRemoteApp(object):
         Usually you don't have to do that but use the :meth:`request`
         method instead.
         """
-        return oauth2.Client(self._consumer, self.get_request_token(token))
+        client = oauth2.Client(self._consumer, self.get_request_token(token))
+        if self.additional_certs:
+            client.ca_certs = self.additional_certs
+        return client
 
     def request(self, url, data="", headers=None, format='urlencoded',
                 method='GET', content_type=None, token=None):
