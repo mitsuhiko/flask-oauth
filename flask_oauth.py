@@ -178,8 +178,7 @@ class OAuthRemoteApp(object):
                  consumer_key, consumer_secret,
                  request_token_params=None,
                  access_token_params=None,
-                 access_token_method='GET',
-                 additional_certs=None):
+                 access_token_method='GET'):
         self.oauth = oauth
         #: the `base_url` all URLs are joined with.
         self.base_url = base_url
@@ -196,8 +195,6 @@ class OAuthRemoteApp(object):
         self._consumer = oauth2.Consumer(self.consumer_key,
                                          self.consumer_secret)
         self._client = OAuthClient(self._consumer)
-        if additional_certs:
-            self._client.ca_certs = additional_certs
 
     def status_okay(self, resp):
         """Given request data, checks if the status is okay."""
