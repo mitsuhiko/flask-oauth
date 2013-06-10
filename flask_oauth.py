@@ -170,6 +170,8 @@ class OAuthRemoteApp(object):
     :param access_token_method: the HTTP method that should be used
                                 for the access_token_url.  Defaults
                                 to ``'GET'``.
+    :param additional_certs: path to a ``pem`` file containing additional SSL 
+                             certificates to use for ``HTTPS`` connections.
     """
 
     def __init__(self, oauth, name, base_url,
