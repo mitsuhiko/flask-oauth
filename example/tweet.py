@@ -21,7 +21,7 @@ oauth = OAuth()
 twitter = oauth.remote_app('twitter',
     # unless absolute urls are used to make requests, this will be added
     # before all URLs.  This is also true for request_token_url and others.
-    base_url='https://api.twitter.com/1/',
+    base_url='https://api.twitter.com/1.1/',
     # where flask should look for new request tokens
     request_token_url='https://api.twitter.com/oauth/request_token',
     # where flask should exchange the token with the remote application
