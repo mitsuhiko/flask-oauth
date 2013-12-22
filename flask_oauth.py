@@ -36,7 +36,7 @@ def get_etree():
 
 
 def parse_response(resp, content, strict=False):
-    ct, options = parse_options_header(resp['content-type'])
+    ct, options = parse_options_header(resp.get('content-type'))
     if ct in ('application/json', 'text/javascript'):
         return json.loads(content)
     elif ct in ('application/xml', 'text/xml'):
