@@ -40,12 +40,7 @@ def parse_response(resp, content, strict=False):
     if ct in ('application/json', 'text/javascript'):
         return json.loads(content)
     elif ct in ('application/xml', 'text/xml'):
-        # technically, text/xml is ascii based but because many
-        # implementations get that wrong and utf-8 is a superset
-        # of utf-8 anyways, so there is not much harm in assuming
-        # utf-8 here
-        charset = options.get('charset', 'utf-8')
-        return get_etree().fromstring(content.decode(charset))
+        return get_etree().fromstring(content)
     elif ct != 'application/x-www-form-urlencoded':
         if strict:
             return content
