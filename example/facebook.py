@@ -20,7 +20,7 @@ facebook = oauth.remote_app('facebook',
     authorize_url='https://www.facebook.com/dialog/oauth',
     consumer_key=FACEBOOK_APP_ID,
     consumer_secret=FACEBOOK_APP_SECRET,
-    request_token_params={'scope': 'email'}
+    request_token_params={'scope': 'email', 'info_fields': 'email,name'}
 )
 
 
@@ -46,8 +46,8 @@ def facebook_authorized(resp):
         )
     session['oauth_token'] = (resp['access_token'], '')
     me = facebook.get('/me')
-    return 'Logged in as id=%s name=%s redirect=%s' % \
-        (me.data['id'], me.data['name'], request.args.get('next'))
+    return 'Logged in as id=%s name=%s email=%s redirect=%s' % \
+        (me.data['id'], me.data['name'], me.data['email'], request.args.get('next'))
 
 
 @facebook.tokengetter
