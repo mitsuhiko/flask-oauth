@@ -47,7 +47,6 @@ def index():
             # Unauthorized - bad token
             session.pop('access_token', None)
             return redirect(url_for('login'))
-        return res.read()
 
     return res.read()
 
