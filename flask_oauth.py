@@ -11,13 +11,14 @@
 import httplib2
 from functools import wraps
 from urlparse import urljoin
-from flask import request, session, json, redirect, Response
+from flask import request, session, json, redirect
 from werkzeug import url_decode, url_encode, url_quote, \
-     parse_options_header, Headers
+    parse_options_header, Headers
 import oauth2
 
-
 _etree = None
+
+
 def get_etree():
     """Return an elementtree implementation.  Prefers lxml"""
     global _etree
@@ -293,7 +294,7 @@ class OAuthRemoteApp(object):
             callback = urljoin(request.url, callback)
         resp, content = self._client.request_new_token(
             self.expand_url(self.request_token_url), callback,
-                self.request_token_params)
+            self.request_token_params)
         if not self.status_okay(resp):
             raise OAuthException('Failed to generate request token',
                                  type='token_generation_failed')
@@ -393,9 +394,10 @@ class OAuthRemoteApp(object):
         }
         remote_args.update(self.access_token_params)
         if self.access_token_method == 'POST':
-            resp, content = self._client.request(self.expand_url(self.access_token_url),
-                                                 self.access_token_method,
-                                                 url_encode(remote_args))
+            resp, content = self._client.request(
+                self.expand_url(self.access_token_url),
+                self.access_token_method,
+                url_encode(remote_args))
         elif self.access_token_method == 'GET':
             url = add_query(self.expand_url(self.access_token_url), remote_args)
             resp, content = self._client.request(url, self.access_token_method)
