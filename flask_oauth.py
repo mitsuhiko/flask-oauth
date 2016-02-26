@@ -10,7 +10,11 @@
 """
 import httplib2
 from functools import wraps
-from urlparse import urljoin
+# urlparse module has been renamed in Python 3.x
+try:
+    from urlparse import urljoin
+except ImportError:
+    from urllib.parse import urljoin
 from flask import request, session, json, redirect, Response
 from werkzeug import url_decode, url_encode, url_quote, \
      parse_options_header, Headers
