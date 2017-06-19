@@ -8,13 +8,19 @@
     :copyright: (c) 2010 by Armin Ronacher.
     :license: BSD, see LICENSE for more details.
 """
+import sys
+
 import httplib2
 from functools import wraps
-from urlparse import urljoin
 from flask import request, session, json, redirect, Response
 from werkzeug import url_decode, url_encode, url_quote, \
      parse_options_header, Headers
 import oauth2
+
+if sys.version_info[0] == 3:
+    from urllib.parse import urljoin
+else:
+    from urlparse import urljoin
 
 
 _etree = None
