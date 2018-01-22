@@ -30,6 +30,9 @@ setup(
         'Flask',
         'oauth2'
     ],
+    dependency_links=[
+        'git+ssh://git@github.com:i-kiwamu/python3-oauth2.git#egg=oauth2'
+    ],
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Web Environment',
