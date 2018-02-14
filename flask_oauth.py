@@ -10,6 +10,7 @@
 """
 import httplib2
 from functools import wraps
+
 # urlparse module has been renamed in Python 3.x
 try:
     from urlparse import urljoin
