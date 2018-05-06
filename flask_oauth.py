@@ -169,8 +169,8 @@ class OAuthRemoteApp(object):
                                  to forward to the request token URL
                                  or authorize URL depending on oauth
                                  version.
-    :param access_token_params: an option diction of parameters to forward to
-                                the access token URL
+    :param access_token_params: an optional dictionary of parameters
+                                to forward to the access token URL.
     :param access_token_method: the HTTP method that should be used
                                 for the access_token_url.  Defaults
                                 to ``'GET'``.
