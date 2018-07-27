@@ -333,8 +333,10 @@ class OAuthRemoteApp(object):
         """
         if self.request_token_url:
             token = self.generate_request_token(callback)[0]
-            url = '%s?oauth_token=%s' % (self.expand_url(self.authorize_url),
-                                         url_quote(token))
+            url = add_query(
+                self.expand_url(self.authorize_url),
+                {'oauth_token': token}
+            )
         else:
             assert callback is not None, 'Callback is required OAuth2'
             # This is for things like facebook's oauth.  Since we need the
@@ -374,9 +376,9 @@ class OAuthRemoteApp(object):
         function.
         """
         client = self.make_client()
-        resp, content = client.request('%s?oauth_verifier=%s' % (
+        resp, content = client.request(add_query(
             self.expand_url(self.access_token_url),
-            request.args['oauth_verifier']
+            {'oauth_verifier': request.args['oauth_verifier']}
         ), self.access_token_method)
         data = parse_response(resp, content)
         if not self.status_okay(resp):
