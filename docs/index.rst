@@ -121,6 +121,11 @@ redirected back to. For example::
         return twitter.authorize(callback=url_for('oauth_authorized',
             next=request.args.get('next') or request.referrer or None))
 
+For the callback to work, you must set a placeholder "Callback URL" in your
+app's "Settings" tab at https://dev.twitter.com. The URL configured in this
+settings page isn't actually used, but not setting it will prevent the
+authorize() call mentioned above from working.
+
 If the application redirects back, the remote application will have passed all
 relevant information to the `oauth_authorized` function: a special
 response object with all the data, or ``None`` if the user denied the

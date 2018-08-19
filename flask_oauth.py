@@ -299,8 +299,10 @@ class OAuthRemoteApp(object):
             self.expand_url(self.request_token_url), callback,
                 self.request_token_params)
         if not self.status_okay(resp):
-            raise OAuthException('Failed to generate request token',
-                                 type='token_generation_failed')
+            msg = "Failed to generate request token." \
+                  + " Response code: '%s', response content: '%s'" \
+                      % (resp['status'], content)
+            raise OAuthException(msg, type='token_generation_failed')
         data = parse_response(resp, content)
         if data is None:
             raise OAuthException('Invalid token response from ' + self.name,
