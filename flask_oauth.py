@@ -174,6 +174,8 @@ class OAuthRemoteApp(object):
     :param access_token_method: the HTTP method that should be used
                                 for the access_token_url.  Defaults
                                 to ``'GET'``.
+    :param additional_certs: path to a ``pem`` file containing additional SSL 
+                             certificates to use for ``HTTPS`` connections.
     """
 
     def __init__(self, oauth, name, base_url,
@@ -182,7 +184,8 @@ class OAuthRemoteApp(object):
                  consumer_key, consumer_secret,
                  request_token_params=None,
                  access_token_params=None,
-                 access_token_method='GET'):
+                 access_token_method='GET',
+                 additional_certs=None):
         self.oauth = oauth
         #: the `base_url` all URLs are joined with.
         self.base_url = base_url
@@ -196,9 +199,12 @@ class OAuthRemoteApp(object):
         self.request_token_params = request_token_params or {}
         self.access_token_params = access_token_params or {}
         self.access_token_method = access_token_method
+        self.additional_certs = additional_certs
         self._consumer = oauth2.Consumer(self.consumer_key,
                                          self.consumer_secret)
         self._client = OAuthClient(self._consumer)
+        if additional_certs:
+            self._client.ca_certs = additional_certs
 
     def status_okay(self, resp):
         """Given request data, checks if the status is okay."""
@@ -240,7 +246,10 @@ class OAuthRemoteApp(object):
         Usually you don't have to do that but use the :meth:`request`
         method instead.
         """
-        return oauth2.Client(self._consumer, self.get_request_token(token))
+        client = oauth2.Client(self._consumer, self.get_request_token(token))
+        if self.additional_certs:
+            client.ca_certs = self.additional_certs
+        return client
 
     def request(self, url, data="", headers=None, format='urlencoded',
                 method='GET', content_type=None, token=None):
