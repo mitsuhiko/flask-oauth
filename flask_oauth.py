@@ -40,7 +40,8 @@ def get_etree():
 
 
 def parse_response(resp, content, strict=False):
-    ct, options = parse_options_header(resp['content-type'])
+    content_type = resp.get('content-type', 'text/html')
+    ct, options = parse_options_header(content_type)
     if ct in ('application/json', 'text/javascript'):
         return json.loads(content)
     elif ct in ('application/xml', 'text/xml'):
@@ -226,6 +227,7 @@ class OAuthRemoteApp(object):
         :meth:`request`.
         """
         kwargs['method'] = 'PUT'
+        kwargs['format'] = 'urlencoded'
         return self.request(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
@@ -233,6 +235,7 @@ class OAuthRemoteApp(object):
         :meth:`request`.
         """
         kwargs['method'] = 'DELETE'
+        kwargs['format'] = 'urlencoded'
         return self.request(*args, **kwargs)
 
     def make_client(self, token=None):
@@ -275,16 +278,19 @@ class OAuthRemoteApp(object):
         headers = dict(headers or {})
         client = self.make_client(token)
         url = self.expand_url(url)
-        if method == 'GET':
+        if method in ['GET', 'PUT', 'DELETE']:
             assert format == 'urlencoded'
             if data:
-                url = add_query(url, data)
+                url = add_query(url, data).replace('%2C', ',')
                 data = ""
         else:
             if content_type is None:
                 data, content_type = encode_request_data(data, format)
             if content_type is not None:
                 headers['Content-Type'] = content_type
+
+        data = data.replace('%2C', ',')
+
         return OAuthResponse(*client.request(url, method=method,
                                              body=data or '',
                                              headers=headers))
