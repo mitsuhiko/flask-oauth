@@ -7,7 +7,7 @@ Flask-OAuth is an extension to `Flask`_ that allows you to interact with
 remote `OAuth`_ enabled applications.  Currently it only implements the
 consumer interface so you cannot expose your own API with OAuth.
 
-Flak-OAuth depends on the `python-oauth2`_ module.
+Flask-OAuth depends on the `python-oauth2`_ module.
 
 Features
 --------
