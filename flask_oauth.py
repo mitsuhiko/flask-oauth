@@ -16,8 +16,15 @@ try:
 except ImportError:
     from urllib.parse import urljoin
 from flask import request, session, json, redirect, Response
-from werkzeug import url_decode, url_encode, url_quote, \
-     parse_options_header, Headers
+# update for running on werkzeug>=1.0.1
+try:
+    from werkzeug import (
+        url_decode, url_encode, url_quote, parse_options_header, Headers
+    )
+except ImportError:
+    from werkzeug.datastructures import Headers
+    from werkzeug.urls import url_decode, url_encode, url_quote
+    from werkzeug.http import parse_options_header
 import oauth2
 
 
